@@ -34,13 +34,12 @@ import MetalKit
 class Renderer: NSObject {
   static var device: MTLDevice!
   static var commandQueue: MTLCommandQueue!
-  var mesh: MTKMesh!
-  var vertexBuffer: MTLBuffer!
   var pipelineState: MTLRenderPipelineState!
   
   var timer: Float = 0
   var uniforms = Uniforms()
-	var outlinedRectangles: [Vertex] = []
+	var rects: [Rect] = []
+	var vertices : [Vertex] = []
   
   init(metalView: MTKView) {
     guard
@@ -51,17 +50,7 @@ class Renderer: NSObject {
     Renderer.device = device
     Renderer.commandQueue = commandQueue
     metalView.device = device
-    
-    let vertexDescriptor = MTLVertexDescriptor()
-    vertexDescriptor.attributes[0].format = .float3
-    vertexDescriptor.attributes[0].offset = 0
-    vertexDescriptor.attributes[0].bufferIndex = 0
-    
-    vertexDescriptor.layouts[0].stride = MemoryLayout<SIMD3<Float>>.stride
-    let meshDescriptor =
-      MTKModelIOVertexDescriptorFromMetal(vertexDescriptor)
-    (meshDescriptor.attributes[0] as! MDLVertexAttribute).name = MDLVertexAttributePosition
-    
+        
     let library = device.makeDefaultLibrary()
     let vertexFunction = library?.makeFunction(name: "vertex_main")
     let fragmentFunction = library?.makeFunction(name: "fragment_main")
@@ -88,7 +77,27 @@ class Renderer: NSObject {
   }
 	
 	func addRectangle(style: RectangleStyle) {
-		outlinedRectangles.append(contentsOf: ShapeGenerator.makeRect(center: .zero, size: CGSize(width: 0.5, height: 0.5)))
+		switch style {
+		case .fill:
+			let rect = ShapeGenerator.makeFilledRect(
+				center: CGPoint(x: Random.generate(), y: Random.generate()),
+				size: CGSize(width: Random.generate(), height: Random.generate())
+			)
+			rects.append(rect)
+			vertices.append(contentsOf: rect.vertices)
+		case .outline:
+			let rect = ShapeGenerator.makeOutlinedRect(
+				center: CGPoint(x: Random.generate(), y: Random.generate()),
+				size: CGSize(width: Random.generate(), height: Random.generate())
+			)
+			rects.append(rect)
+			vertices.append(contentsOf: rect.vertices)
+		}
+	}
+	
+	func clear() {
+		rects = []
+		vertices = []
 	}
 	
 	enum RectangleStyle {
@@ -96,22 +105,56 @@ class Renderer: NSObject {
 		case fill
 	}
 	
+	struct Random {
+		static func generate() -> Double {
+			Double.random(in: -1..<1)
+		}
+	}
+	
 	struct ShapeGenerator {
-		static func makeRect(center: CGPoint, size: CGSize) -> [Vertex] {
+		static func makeOutlinedRect(center: CGPoint, size: CGSize) -> OutlinedRect {
 			let centerX = Float(center.x)
 			let centerY = Float(center.y)
 			let width = Float(size.width)
 			let height = Float(size.height)
 			
-			return [
+			return OutlinedRect(vertices: [
 				Vertex(position: vector_float2(centerX - width / 2, centerY - height / 2)),
 				Vertex(position: vector_float2(centerX + width / 2, centerY - height / 2)),
 				Vertex(position: vector_float2(centerX + width / 2, centerY + height / 2)),
 				Vertex(position: vector_float2(centerX - width / 2, centerY + height / 2)),
 				Vertex(position: vector_float2(centerX - width / 2, centerY - height / 2)),
-			]
+			])
+		}
+		
+		static func makeFilledRect(center: CGPoint, size: CGSize) -> FilledRect {
+			let centerX = Float(center.x)
+			let centerY = Float(center.y)
+			let width = Float(size.width)
+			let height = Float(size.height)
+			
+			return FilledRect(vertices: [
+				Vertex(position: vector_float2(centerX - width / 2, centerY - height / 2)),
+				Vertex(position: vector_float2(centerX + width / 2, centerY - height / 2)),
+				Vertex(position: vector_float2(centerX + width / 2, centerY + height / 2)),
+				Vertex(position: vector_float2(centerX + width / 2, centerY + height / 2)),
+				Vertex(position: vector_float2(centerX - width / 2, centerY + height / 2)),
+				Vertex(position: vector_float2(centerX - width / 2, centerY - height / 2)),
+			])
 		}
 	}
+}
+
+protocol Rect {
+	var vertices: [Vertex] { get }
+}
+
+struct FilledRect: Rect {
+	let vertices: [Vertex]
+}
+
+struct OutlinedRect: Rect {
+	let vertices: [Vertex]
 }
 
 extension Renderer: MTKViewDelegate {
@@ -126,21 +169,27 @@ extension Renderer: MTKViewDelegate {
       commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else {
         return
     }
-    		
 		renderEncoder.setVertexBytes(
-			outlinedRectangles,
-			length: MemoryLayout<Vertex>.stride * outlinedRectangles.count,
+			vertices,
+			length: MemoryLayout<Vertex>.stride * vertices.count,
 			index: 0
 		)
 		
     renderEncoder.setRenderPipelineState(pipelineState)
-		if outlinedRectangles.count > 0 {
-			renderEncoder.drawPrimitives(
-				type: .lineStrip,
-				vertexStart: 0,
-				vertexCount: outlinedRectangles.count
-			)
+		
+		
+		var vertexCount = 0
+		if rects.count > 0 {
+			rects.forEach { rect in
+				renderEncoder.drawPrimitives(
+					type: rect is FilledRect ? .triangle : .lineStrip,
+					vertexStart: vertexCount,
+					vertexCount: rect.vertices.count
+				)
+				vertexCount += rect.vertices.count
+			}
 		}
+
     renderEncoder.endEncoding()
     guard let drawable = view.currentDrawable else {
       return

@@ -41,6 +41,6 @@ vertex float4 vertex_main(uint vertexID [[vertex_id]],
 }
 
 fragment float4 fragment_main() {
-  return float4(0, 0, 1, 1);
+  return float4(0, 0, 0, 1);
 }
 

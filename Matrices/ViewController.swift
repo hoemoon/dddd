@@ -35,9 +35,39 @@ class ViewController: LocalViewController {
   
   var renderer: Renderer?
 	
-	lazy var button: UIButton = {
+	lazy var addOutlinedRectButton: UIButton = {
 		let button = UIButton(type: .custom)
+		button.addTarget(self, action: #selector(didTapAddOutlinedRectButton(_:)), for: .touchDown)
+		button.setTitle("add outlined rectangle", for: .normal)
+		button.setTitleColor(.black, for: .normal)
 		return button
+	}()
+	
+	lazy var addFilledRectButton: UIButton = {
+		let button = UIButton(type: .custom)
+		button.addTarget(self, action: #selector(didTapAddFilledRectButton(_:)), for: .touchDown)
+		button.setTitle("add filled rectangle", for: .normal)
+		button.setTitleColor(.black, for: .normal)
+		return button
+	}()
+	
+	lazy var clearButton: UIButton = {
+		let button = UIButton(type: .custom)
+		button.addTarget(self, action: #selector(didTapClear(_:)), for: .touchDown)
+		button.setTitle("clear", for: .normal)
+		button.setTitleColor(.black, for: .normal)
+		return button
+	}()
+
+	lazy var stackView: UIStackView = {
+		let view = UIStackView(arrangedSubviews: [
+			addOutlinedRectButton,
+			addFilledRectButton,
+			clearButton
+		])
+		view.translatesAutoresizingMaskIntoConstraints = false
+		view.axis = .vertical
+		return view
 	}()
   
   override func viewDidLoad() {
@@ -47,19 +77,23 @@ class ViewController: LocalViewController {
     }
     renderer = Renderer(metalView: metalView)
 		
-		button.addTarget(self, action: #selector(didTapButton(_:)), for: .touchDown)
-		button.setTitle("add outlined rectangle", for: .normal)
-		button.setTitleColor(.black, for: .normal)
-		button.translatesAutoresizingMaskIntoConstraints = false
-		
-		view.addSubview(button)
+		view.addSubview(stackView)
 		NSLayoutConstraint.activate([
-			view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: button.topAnchor),
-			view.safeAreaLayoutGuide.leadingAnchor.constraint(equalTo: button.leadingAnchor),
+			view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: stackView.topAnchor),
+			view.safeAreaLayoutGuide.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
 		])
   }
 	
-	@objc func didTapButton(_ button: UIButton) {
+	@objc func didTapAddOutlinedRectButton(_ button: UIButton) {
+		renderer?.addRectangle(style: .outline)
+	}
+	
+	@objc func didTapAddFilledRectButton(_ button: UIButton) {
 		renderer?.addRectangle(style: .fill)
 	}
+	
+	@objc func didTapClear(_ button: UIButton) {
+		renderer?.clear()
+	}
+
 }
