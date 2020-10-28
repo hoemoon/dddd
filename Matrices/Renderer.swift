@@ -40,7 +40,7 @@ class Renderer: NSObject {
   
   var timer: Float = 0
   var uniforms = Uniforms()
-	var vertices: [Vertex] = []
+	var outlinedRectangles: [Vertex] = []
   
   init(metalView: MTKView) {
     guard
@@ -88,22 +88,29 @@ class Renderer: NSObject {
   }
 	
 	func addRectangle(style: RectangleStyle) {
-		vertices.append(contentsOf: makeRect())
-	}
-	
-	func makeRect() -> [Vertex] {
-		[
-			Vertex(position: vector_float2(0, 0)),
-			Vertex(position: vector_float2(0.5, 0)),
-			Vertex(position: vector_float2(0.5, 0.5)),
-			Vertex(position: vector_float2(0, 0.5)),
-			Vertex(position: vector_float2(0, 0)),
-		]
+		outlinedRectangles.append(contentsOf: ShapeGenerator.makeRect(center: .zero, size: CGSize(width: 0.5, height: 0.5)))
 	}
 	
 	enum RectangleStyle {
 		case outline
 		case fill
+	}
+	
+	struct ShapeGenerator {
+		static func makeRect(center: CGPoint, size: CGSize) -> [Vertex] {
+			let centerX = Float(center.x)
+			let centerY = Float(center.y)
+			let width = Float(size.width)
+			let height = Float(size.height)
+			
+			return [
+				Vertex(position: vector_float2(centerX - width / 2, centerY - height / 2)),
+				Vertex(position: vector_float2(centerX + width / 2, centerY - height / 2)),
+				Vertex(position: vector_float2(centerX + width / 2, centerY + height / 2)),
+				Vertex(position: vector_float2(centerX - width / 2, centerY + height / 2)),
+				Vertex(position: vector_float2(centerX - width / 2, centerY - height / 2)),
+			]
+		}
 	}
 }
 
@@ -121,17 +128,17 @@ extension Renderer: MTKViewDelegate {
     }
     		
 		renderEncoder.setVertexBytes(
-			vertices,
-			length: MemoryLayout<Vertex>.stride * vertices.count,
+			outlinedRectangles,
+			length: MemoryLayout<Vertex>.stride * outlinedRectangles.count,
 			index: 0
 		)
 		
     renderEncoder.setRenderPipelineState(pipelineState)
-		if vertices.count > 0 {
+		if outlinedRectangles.count > 0 {
 			renderEncoder.drawPrimitives(
 				type: .lineStrip,
 				vertexStart: 0,
-				vertexCount: vertices.count
+				vertexCount: outlinedRectangles.count
 			)
 		}
     renderEncoder.endEncoding()

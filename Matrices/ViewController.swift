@@ -48,7 +48,7 @@ class ViewController: LocalViewController {
     renderer = Renderer(metalView: metalView)
 		
 		button.addTarget(self, action: #selector(didTapButton(_:)), for: .touchDown)
-		button.setTitle("add rectangle", for: .normal)
+		button.setTitle("add outlined rectangle", for: .normal)
 		button.setTitleColor(.black, for: .normal)
 		button.translatesAutoresizingMaskIntoConstraints = false
 		
