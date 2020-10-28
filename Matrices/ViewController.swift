@@ -34,6 +34,11 @@ import MetalKit
 class ViewController: LocalViewController {
   
   var renderer: Renderer?
+	
+	lazy var button: UIButton = {
+		let button = UIButton(type: .custom)
+		return button
+	}()
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -41,5 +46,20 @@ class ViewController: LocalViewController {
       fatalError("metal view not set up in storyboard")
     }
     renderer = Renderer(metalView: metalView)
+		
+		button.addTarget(self, action: #selector(didTapButton(_:)), for: .touchDown)
+		button.setTitle("add rectangle", for: .normal)
+		button.setTitleColor(.black, for: .normal)
+		button.translatesAutoresizingMaskIntoConstraints = false
+		
+		view.addSubview(button)
+		NSLayoutConstraint.activate([
+			view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: button.topAnchor),
+			view.safeAreaLayoutGuide.leadingAnchor.constraint(equalTo: button.leadingAnchor),
+		])
   }
+	
+	@objc func didTapButton(_ button: UIButton) {
+		renderer?.addRectangle(style: .fill)
+	}
 }

@@ -40,18 +40,7 @@ class Renderer: NSObject {
   
   var timer: Float = 0
   var uniforms = Uniforms()
-	var vertices: [Vertex] = [
-		Vertex(position: vector_float2(0, 0.5)),
-		Vertex(position: vector_float2(0.1, 0.5)),
-		Vertex(position: vector_float2(0.2, 0.5)),
-		Vertex(position: vector_float2(0.3, 0.5)),
-		Vertex(position: vector_float2(0.4, 0.5)),
-		Vertex(position: vector_float2(0.5, 0.5)),
-		Vertex(position: vector_float2(0.6, 0.5)),
-		Vertex(position: vector_float2(0.7, 0.5)),
-		Vertex(position: vector_float2(0.8, 0.5)),
-		Vertex(position: vector_float2(0.9, 0.5)),
-	]
+	var vertices: [Vertex] = []
   
   init(metalView: MTKView) {
     guard
@@ -118,6 +107,25 @@ class Renderer: NSObject {
     uniforms.viewMatrix = float4x4(translation: [0.8, 0, 0]).inverse
     mtkView(metalView, drawableSizeWillChange: metalView.bounds.size)
   }
+	
+	func addRectangle(style: RectangleStyle) {
+		vertices.append(contentsOf: makeRect())
+	}
+	
+	func makeRect() -> [Vertex] {
+		[
+			Vertex(position: vector_float2(0, 0)),
+			Vertex(position: vector_float2(0.5, 0)),
+			Vertex(position: vector_float2(0.5, 0.5)),
+			Vertex(position: vector_float2(0, 0.5)),
+			Vertex(position: vector_float2(0, 0)),
+		]
+	}
+	
+	enum RectangleStyle {
+		case outline
+		case fill
+	}
 }
 
 extension Renderer: MTKViewDelegate {
@@ -147,12 +155,13 @@ extension Renderer: MTKViewDelegate {
 		)
 		
     renderEncoder.setRenderPipelineState(pipelineState)
-		renderEncoder.drawPrimitives(
-			type: .lineStrip,
-			vertexStart: 0,
-			vertexCount: vertices.count
-		)
-    
+		if vertices.count > 0 {
+			renderEncoder.drawPrimitives(
+				type: .lineStrip,
+				vertexStart: 0,
+				vertexCount: vertices.count
+			)
+		}
     renderEncoder.endEncoding()
     guard let drawable = view.currentDrawable else {
       return
