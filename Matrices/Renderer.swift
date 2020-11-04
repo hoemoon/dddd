@@ -40,6 +40,7 @@ class Renderer: NSObject {
   var uniforms = Uniforms()
 	var rects: [Rect] = []
 	var vertices : [Vertex] = []
+	var screenSize: vector_float2 = .zero
   
   init(metalView: MTKView) {
     guard
@@ -80,15 +81,15 @@ class Renderer: NSObject {
 		switch style {
 		case .fill:
 			let rect = ShapeGenerator.makeFilledRect(
-				center: CGPoint(x: Random.generate(), y: Random.generate()),
-				size: CGSize(width: Random.generate(), height: Random.generate())
+				center: CGPoint(x: 0, y: 0),
+				size: CGSize(width: CGFloat(screenSize.x / 3), height: CGFloat(screenSize.x / 3))
 			)
 			rects.append(rect)
 			vertices.append(contentsOf: rect.vertices)
 		case .outline:
 			let rect = ShapeGenerator.makeOutlinedRect(
-				center: CGPoint(x: Random.generate(), y: Random.generate()),
-				size: CGSize(width: Random.generate(), height: Random.generate())
+				center: CGPoint(x: 0, y: 0),
+				size: CGSize(width: CGFloat(screenSize.x / 3), height: CGFloat(screenSize.x / 3))
 			)
 			rects.append(rect)
 			vertices.append(contentsOf: rect.vertices)
@@ -104,13 +105,7 @@ class Renderer: NSObject {
 		case outline
 		case fill
 	}
-	
-	struct Random {
-		static func generate() -> Double {
-			Double.random(in: -1..<1)
-		}
-	}
-	
+		
 	struct ShapeGenerator {
 		static func makeOutlinedRect(center: CGPoint, size: CGSize) -> OutlinedRect {
 			let centerX = Float(center.x)
@@ -159,6 +154,8 @@ struct OutlinedRect: Rect {
 
 extension Renderer: MTKViewDelegate {
   func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+		screenSize.x = Float(size.width)
+		screenSize.y = Float(size.height)
   }
   
   func draw(in view: MTKView) {
@@ -169,6 +166,12 @@ extension Renderer: MTKViewDelegate {
       commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else {
         return
     }
+		renderEncoder.setVertexBytes(
+			&screenSize,
+			length: MemoryLayout<vector_float2>.stride,
+			index: 1
+		)
+
 		renderEncoder.setVertexBytes(
 			vertices,
 			length: MemoryLayout<Vertex>.stride * vertices.count,

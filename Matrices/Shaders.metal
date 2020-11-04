@@ -35,9 +35,21 @@ using namespace metal;
 #import "Common.h"
 
 vertex float4 vertex_main(uint vertexID [[vertex_id]],
-													constant Vertex *vertices [[buffer(0)]])
+													constant Vertex *vertices [[buffer(0)]],
+													constant vector_float2 *screenSizePointer [[buffer(1)]]
+													)
 {
-	return vector_float4(vertices[vertexID].position.xy, 1, 1);
+	float2 pixelSpacePosition = vertices[vertexID].position.xy;
+	vector_float2 screenSize = vector_float2(*screenSizePointer);
+
+	
+	vector_float4 position = vector_float4(0.0, 0.0, 0.0, 1.0);
+	position.x = pixelSpacePosition.x - (screenSize.x / 2.0);
+	position.y = pixelSpacePosition.y - (screenSize.y / 2.0);
+	
+	position.xy = pixelSpacePosition / (screenSize / 2.0);
+
+	return vector_float4(position.xy, 1, 1);
 }
 
 fragment float4 fragment_main() {
