@@ -101,6 +101,30 @@ class Renderer: NSObject {
 		vertices = []
 	}
 	
+	func translation() {
+		let matrix = float4x4(translation: float3(10, 0, 0))
+		vertices = vertices.map {
+			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
+			return Vertex(position: vector_float2(result.x, result.y))
+		}
+	}
+	
+	func rotate() {
+		let matrix = float4x4(rotationZ: 5)
+		vertices = vertices.map {
+			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
+			return Vertex(position: vector_float2(result.x, result.y))
+		}
+	}
+	
+	func scale() {
+		let matrix = float4x4(scaling: float3(1.1, 1.1, 1.1))
+		vertices = vertices.map {
+			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
+			return Vertex(position: vector_float2(result.x, result.y))
+		}
+	}
+	
 	enum RectangleStyle {
 		case outline
 		case fill

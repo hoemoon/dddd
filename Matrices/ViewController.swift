@@ -58,12 +58,40 @@ class ViewController: LocalViewController {
 		button.setTitleColor(.black, for: .normal)
 		return button
 	}()
+	
+	lazy var moveButton: UIButton = {
+		let button = UIButton(type: .custom)
+		button.addTarget(self, action: #selector(didTapMoveButton(_:)), for: .touchDown)
+		button.setTitle("move", for: .normal)
+		button.setTitleColor(.black, for: .normal)
+		return button
+	}()
+	
+	lazy var rotateButton: UIButton = {
+		let button = UIButton(type: .custom)
+		button.addTarget(self, action: #selector(didTapRotateButton(_:)), for: .touchDown)
+		button.setTitle("rotate", for: .normal)
+		button.setTitleColor(.black, for: .normal)
+		return button
+	}()
+
+	lazy var scaleButton: UIButton = {
+		let button = UIButton(type: .custom)
+		button.addTarget(self, action: #selector(didTapScaleButton(_:)), for: .touchDown)
+		button.setTitle("scale", for: .normal)
+		button.setTitleColor(.black, for: .normal)
+		return button
+	}()
+
 
 	lazy var stackView: UIStackView = {
 		let view = UIStackView(arrangedSubviews: [
 			addOutlinedRectButton,
 			addFilledRectButton,
-			clearButton
+			clearButton,
+			moveButton,
+			rotateButton,
+			scaleButton
 		])
 		view.translatesAutoresizingMaskIntoConstraints = false
 		view.axis = .vertical
@@ -95,5 +123,16 @@ class ViewController: LocalViewController {
 	@objc func didTapClear(_ button: UIButton) {
 		renderer?.clear()
 	}
-
+	
+	@objc func didTapMoveButton(_ button: UIButton) {
+		renderer?.translation()
+	}
+	
+	@objc func didTapRotateButton(_ button: UIButton) {
+		renderer?.rotate()
+	}
+	
+	@objc func didTapScaleButton(_ button: UIButton) {
+		renderer?.scale()
+	}
 }
