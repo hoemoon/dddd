@@ -41,6 +41,12 @@ class Renderer: NSObject {
 	var rects: [Rect] = []
 	var vertices : [Vertex] = []
 	var screenSize: vector_float2 = .zero
+	
+	var scaleMatrix: float4x4 = .identity()
+	var rotationMatrix: float4x4 = .identity()
+	var translateMatrix: float4x4 = .identity()
+	
+	var translated: Float = .zero
   
   init(metalView: MTKView) {
     guard
@@ -99,9 +105,11 @@ class Renderer: NSObject {
 	func clear() {
 		rects = []
 		vertices = []
+		translated = .zero
 	}
 	
 	func translation() {
+		translated += 10
 		let matrix = float4x4(translation: float3(10, 0, 0))
 		vertices = vertices.map {
 			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
@@ -110,7 +118,9 @@ class Renderer: NSObject {
 	}
 	
 	func rotate() {
-		let matrix = float4x4(rotationZ: 5)
+		let matrix = float4x4(translation: float3(translated, 0, 0))
+			* float4x4(rotationZ: 5)
+			* float4x4(translation: float3(translated, 0, 0)).inverse
 		vertices = vertices.map {
 			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
 			return Vertex(position: vector_float2(result.x, result.y))
