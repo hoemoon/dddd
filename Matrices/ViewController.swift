@@ -59,14 +59,6 @@ class ViewController: LocalViewController {
 		return button
 	}()
 	
-	lazy var moveButton: UIButton = {
-		let button = UIButton(type: .custom)
-		button.addTarget(self, action: #selector(didTapMoveButton(_:)), for: .touchDown)
-		button.setTitle("move", for: .normal)
-		button.setTitleColor(.black, for: .normal)
-		return button
-	}()
-	
 	lazy var rotateButton: UIButton = {
 		let button = UIButton(type: .custom)
 		button.addTarget(self, action: #selector(didTapRotateButton(_:)), for: .touchDown)
@@ -89,7 +81,6 @@ class ViewController: LocalViewController {
 			addOutlinedRectButton,
 			addFilledRectButton,
 			clearButton,
-			moveButton,
 			rotateButton,
 			scaleButton
 		])
@@ -110,6 +101,11 @@ class ViewController: LocalViewController {
 			view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: stackView.topAnchor),
 			view.safeAreaLayoutGuide.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
 		])
+		
+		let recognizer = UIPanGestureRecognizer(target: self, action: #selector(Self.handlePanGesture(_:)))
+		metalView.addGestureRecognizer(
+			recognizer
+		)
   }
 	
 	@objc func didTapAddOutlinedRectButton(_ button: UIButton) {
@@ -124,15 +120,18 @@ class ViewController: LocalViewController {
 		renderer?.clear()
 	}
 	
-	@objc func didTapMoveButton(_ button: UIButton) {
-		renderer?.translation()
-	}
-	
 	@objc func didTapRotateButton(_ button: UIButton) {
 		renderer?.rotate()
 	}
 	
 	@objc func didTapScaleButton(_ button: UIButton) {
 		renderer?.scale()
+	}
+	@objc func handlePanGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
+		renderer?.move(delta: vector_float2(
+			Float(gestureRecognizer.translation(in: view).x),
+			-Float(gestureRecognizer.translation(in: view).y)
+		))
+		gestureRecognizer.setTranslation(.zero, in: view)
 	}
 }

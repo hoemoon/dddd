@@ -46,7 +46,7 @@ class Renderer: NSObject {
 	var rotationMatrix: float4x4 = .identity()
 	var translateMatrix: float4x4 = .identity()
 	
-	var translated: Float = .zero
+	var translated: vector_float2 = .zero
   
   init(metalView: MTKView) {
     guard
@@ -88,14 +88,14 @@ class Renderer: NSObject {
 		case .fill:
 			let rect = ShapeGenerator.makeFilledRect(
 				center: CGPoint(x: 0, y: 0),
-				size: CGSize(width: CGFloat(screenSize.x / 3), height: CGFloat(screenSize.x / 3))
+				size: CGSize(width: CGFloat(screenSize.x / 5), height: CGFloat(screenSize.x / 5))
 			)
 			rects.append(rect)
 			vertices.append(contentsOf: rect.vertices)
 		case .outline:
 			let rect = ShapeGenerator.makeOutlinedRect(
 				center: CGPoint(x: 0, y: 0),
-				size: CGSize(width: CGFloat(screenSize.x / 3), height: CGFloat(screenSize.x / 3))
+				size: CGSize(width: CGFloat(screenSize.x / 5), height: CGFloat(screenSize.x / 5))
 			)
 			rects.append(rect)
 			vertices.append(contentsOf: rect.vertices)
@@ -107,20 +107,11 @@ class Renderer: NSObject {
 		vertices = []
 		translated = .zero
 	}
-	
-	func translation() {
-		translated += 10
-		let matrix = float4x4(translation: float3(10, 0, 0))
-		vertices = vertices.map {
-			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
-			return Vertex(position: vector_float2(result.x, result.y))
-		}
-	}
-	
+		
 	func rotate() {
-		let matrix = float4x4(translation: float3(translated, 0, 0))
+		let matrix = float4x4(translation: float3(translated.x, translated.y, 0))
 			* float4x4(rotationZ: 5)
-			* float4x4(translation: float3(translated, 0, 0)).inverse
+			* float4x4(translation: float3(translated.x, translated.y, 0)).inverse
 		vertices = vertices.map {
 			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
 			return Vertex(position: vector_float2(result.x, result.y))
@@ -129,6 +120,16 @@ class Renderer: NSObject {
 	
 	func scale() {
 		let matrix = float4x4(scaling: float3(1.1, 1.1, 1.1))
+		vertices = vertices.map {
+			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
+			return Vertex(position: vector_float2(result.x, result.y))
+		}
+	}
+	
+	
+	func move(delta: vector_float2) {
+		translated += delta
+		let matrix = float4x4(translation: float3(delta.x, delta.y, 0))
 		vertices = vertices.map {
 			let result = matrix * float4($0.position.x, $0.position.y, 0, 1)
 			return Vertex(position: vector_float2(result.x, result.y))
